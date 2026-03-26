@@ -1,19 +1,40 @@
 from http.server import BaseHTTPRequestHandler
 import json
-from moviebox_api import core
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Origin', '*') 
         self.end_headers()
         
         try:
-            results = core.get_popular_search()
+            try:
+                from moviebox_api.core import SearchSync as Search
+            except ImportError:
+                from moviebox_api.core import Search
+            
+            # Melakukan pencarian keyword "Cyberpunk" untuk simulasi Pencarian Populer
+            search_query = Search("Cyberpunk")
+            
+            raw_results = search_query.get_results() if hasattr(search_query, 'get_results') else search_query
+            
+            results = []
+            for item in raw_results:
+                if isinstance(item, dict):
+                    results.append(item)
+                else:
+                    results.append({
+                        "id": getattr(item, 'id', None),
+                        "title": getattr(item, 'title', getattr(item, 'name', 'Tanpa Judul')),
+                        "cover": getattr(item, 'cover', getattr(item, 'poster', getattr(item, 'image', None))),
+                        "year": getattr(item, 'year', None),
+                        "match": getattr(item, 'rating', '95% Kecocokan')
+                    })
+                    
             response_data = {"status": "success", "data": results}
+            
         except Exception as e:
-            response_data = {"status": "error", "message": str(e)}
+            response_data = {"status": "error", "message": f"Moviebox Error: {str(e)}"}
 
         self.wfile.write(json.dumps(response_data).encode('utf-8'))
-      
