@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Class khusus untuk menyembunyikan scrollbar tapi tetap bisa di-scroll */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+body {
+  background-color: #09090b; /* Warna hitam pekat neo */
+  color: white;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
