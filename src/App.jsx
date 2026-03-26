@@ -1,23 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Info, Search, Bell, User, ChevronDown, Loader2 } from 'lucide-react';
+import { Play, Info, Search, Bell, User, ChevronDown, Loader2, X } from 'lucide-react';
 
-// --- DATA CADANGAN (Digunakan jika API Vercel gagal/belum siap) ---
-const FALLBACK_FEATURED = {
-  title: "RED HORIZON",
-  description: "Ketika faksi biru mencoba mengambil alih jaringan utama, seorang pemberontak dari sektor merah harus menyusup ke inti sistem untuk mencegah kehancuran total.",
-  match: "99% Kecocokan",
-  year: "2026",
-  age: "18+",
-  duration: "2j 30m",
-  image: "https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&q=80&w=1925&ixlib=rb-4.0.3" 
-};
-
+// --- DATA CADANGAN ---
 const FALLBACK_TRENDING = [
   { id: 1, title: "Crimson Protocol", img: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=600" },
   { id: 2, title: "Blue Shift", img: "https://images.unsplash.com/photo-1555680202-c86f0e12f086?auto=format&fit=crop&q=80&w=600" },
   { id: 3, title: "Neon Blood", img: "https://images.unsplash.com/photo-1614729939124-032f0b56c9ce?auto=format&fit=crop&q=80&w=600" },
   { id: 4, title: "The Matrix Hack", img: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?auto=format&fit=crop&q=80&w=600" },
   { id: 5, title: "Cyber Warfare", img: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=600" },
+  { id: 11, title: "Red Horizon", img: "https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?auto=format&fit=crop&q=80&w=600" },
 ];
 
 const FALLBACK_SCIFI = [
@@ -27,6 +18,30 @@ const FALLBACK_SCIFI = [
   { id: 9, title: "Cobalt Core", img: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=600" },
   { id: 10, title: "Time Paradox", img: "https://images.unsplash.com/photo-1506443432602-ac2fcd6f54e0?auto=format&fit=crop&q=80&w=600" },
 ];
+
+// --- KOMPONEN POPUP MESSAGE (Ganti Alert) ---
+const MessageBox = ({ message, onClose }) => {
+  if (!message) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="bg-gray-900 border border-blue-500/50 rounded-lg p-6 max-w-sm w-full shadow-[0_0_30px_rgba(59,130,246,0.3)] animate-in fade-in zoom-in duration-200">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-blue-500">Notifikasi</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <p className="text-gray-300">{message}</p>
+        <button 
+          onClick={onClose}
+          className="mt-6 w-full py-2 bg-gradient-to-r from-red-600 to-blue-600 rounded text-white font-bold hover:from-red-500 hover:to-blue-500 transition-all shadow-lg"
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // --- KOMPONEN ANIMASI MUNCUL SAAT SCROLL ---
 const RevealOnScroll = ({ children, delay = 0 }) => {
@@ -41,21 +56,17 @@ const RevealOnScroll = ({ children, delay = 0 }) => {
           observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.1 }
     );
-    
     if (ref.current) observer.observe(ref.current);
-    
-    return () => {
-      if (ref.current) observer.disconnect();
-    };
+    return () => { if (ref.current) observer.disconnect(); };
   }, []);
 
   return (
     <div 
       ref={ref} 
-      className={`transition-all duration-1000 ease-out ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-24'
+      className={`transition-all duration-700 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
       }`}
       style={{ transitionDelay: `${delay}ms` }}
     >
@@ -65,36 +76,30 @@ const RevealOnScroll = ({ children, delay = 0 }) => {
 };
 
 // --- KOMPONEN NAVIGASI ---
-const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
+const Navbar = ({ showMessage }) => {
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-black/90 backdrop-blur-md shadow-[0_4px_30px_rgba(220,38,38,0.15)] border-b border-red-900/30' : 'bg-gradient-to-b from-black/90 to-transparent'}`}>
+    <nav className="fixed top-0 w-full z-50 bg-[#09090b]/95 backdrop-blur-md shadow-[0_4px_30px_rgba(220,38,38,0.15)] border-b border-red-900/30">
       <div className="flex items-center justify-between px-6 md:px-12 py-4">
         <div className="flex items-center gap-8">
-          {/* Logo dengan Gradasi Merah ke Biru */}
-          <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-blue-500 drop-shadow-[0_0_10px_rgba(220,38,38,0.6)] cursor-pointer hover:from-blue-500 hover:to-red-600 transition-all duration-500">
+          <h1 
+            onClick={() => showMessage("Anda sudah berada di Beranda")}
+            className="text-2xl md:text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-blue-500 drop-shadow-[0_0_10px_rgba(220,38,38,0.6)] cursor-pointer hover:from-blue-500 hover:to-red-600 transition-all duration-500"
+          >
             NEO<span className="text-white">STREAM</span>
           </h1>
           
           <ul className="hidden md:flex gap-6 text-sm font-medium text-gray-300">
-            <li className="text-white cursor-pointer hover:text-red-500 transition-colors">Beranda</li>
-            <li className="cursor-pointer hover:text-red-500 transition-colors">Serial TV</li>
-            <li className="cursor-pointer hover:text-red-500 transition-colors">Film</li>
-            <li className="cursor-pointer hover:text-red-500 transition-colors">Terpopuler</li>
+            <li onClick={() => showMessage("Menu Beranda diklik")} className="cursor-pointer hover:text-red-500 transition-colors">Beranda</li>
+            <li onClick={() => showMessage("Menu Serial TV diklik")} className="cursor-pointer hover:text-red-500 transition-colors">Serial TV</li>
+            <li onClick={() => showMessage("Menu Film diklik")} className="cursor-pointer hover:text-red-500 transition-colors">Film</li>
+            <li onClick={() => showMessage("Menu Terpopuler diklik")} className="cursor-pointer hover:text-red-500 transition-colors">Terpopuler</li>
           </ul>
         </div>
 
         <div className="flex items-center gap-4 md:gap-6 text-white">
-          <Search className="w-5 h-5 cursor-pointer hover:text-blue-500 transition-colors" />
-          <Bell className="hidden md:block w-5 h-5 cursor-pointer hover:text-blue-500 transition-colors" />
-          <div className="flex items-center gap-2 cursor-pointer group">
+          <Search onClick={() => showMessage("Fitur Pencarian dibuka")} className="w-5 h-5 cursor-pointer hover:text-blue-500 transition-colors" />
+          <Bell onClick={() => showMessage("Tidak ada notifikasi baru")} className="hidden md:block w-5 h-5 cursor-pointer hover:text-blue-500 transition-colors" />
+          <div onClick={() => showMessage("Menu Profil dibuka")} className="flex items-center gap-2 cursor-pointer group">
             <div className="w-8 h-8 rounded bg-gradient-to-tr from-red-600 to-blue-600 flex items-center justify-center shadow-[0_0_10px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_15px_rgba(220,38,38,0.6)] transition-all">
               <User className="w-5 h-5 text-white" />
             </div>
@@ -106,98 +111,59 @@ const Navbar = () => {
   );
 };
 
-// --- KOMPONEN BANNER UTAMA (HERO) ---
-const Hero = ({ movie }) => {
-  if (!movie) return <div className="w-full h-[85vh] bg-black animate-pulse" />;
-
-  // Pengecekan properti gambar yang tangguh (menyesuaikan format API moviebox)
-  const imageUrl = movie.cover || movie.image || movie.img || movie.thumbnail || FALLBACK_FEATURED.image;
-
-  return (
-    <div className="relative w-full h-[85vh] text-white">
-      <div className="absolute top-0 left-0 w-full h-full">
-        <img 
-          src={imageUrl} 
-          alt={movie.title} 
-          className="w-full h-full object-cover opacity-60"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-transparent" />
-      </div>
-
-      <div className="relative h-full flex flex-col justify-center px-6 md:px-12 lg:w-1/2 pt-20">
-        <RevealOnScroll delay={0}>
-          <h2 className="text-5xl md:text-8xl font-black mb-4 tracking-tighter text-white drop-shadow-[0_0_15px_rgba(220,38,38,0.4)]">
-            {movie.title}
-          </h2>
-        </RevealOnScroll>
-        
-        <RevealOnScroll delay={200}>
-          <div className="flex items-center gap-4 text-sm md:text-base mb-6 font-semibold flex-wrap">
-            <span className="text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.8)]">{movie.match || "98% Kecocokan"}</span>
-            <span>{movie.year || new Date().getFullYear()}</span>
-            <span className="border border-gray-500 px-2 py-0.5 rounded text-gray-300">{movie.age || "18+"}</span>
-            <span className="border border-red-500 text-red-400 px-2 py-0.5 rounded text-xs tracking-widest shadow-[0_0_5px_rgba(220,38,38,0.5)]">HD</span>
-          </div>
-        </RevealOnScroll>
-
-        <RevealOnScroll delay={400}>
-          <p className="text-gray-300 text-base md:text-xl mb-8 leading-relaxed max-w-2xl font-light line-clamp-3">
-            {movie.description || "Pertarungan epik antara faksi merah dan biru di dunia cyberpunk. Saksikan ketegangan yang belum pernah Anda rasakan sebelumnya."}
-          </p>
-        </RevealOnScroll>
-
-        <RevealOnScroll delay={600}>
-          <div className="flex items-center gap-4">
-            {/* Tombol Play - Tema Merah */}
-            <button className="flex items-center gap-2 px-6 py-3 md:px-8 bg-white text-black font-bold rounded hover:bg-red-600 hover:text-white hover:shadow-[0_0_20px_rgba(220,38,38,0.8)] transition-all duration-300 group">
-              <Play className="w-5 h-5 md:w-6 md:h-6 fill-black group-hover:fill-white" />
-              Putar
-            </button>
-            {/* Tombol Detail - Tema Biru */}
-            <button className="flex items-center gap-2 px-6 py-3 md:px-8 bg-gray-800/50 text-white font-bold rounded backdrop-blur-sm hover:bg-gray-800/80 transition-all border border-transparent hover:border-blue-500 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-              <Info className="w-5 h-5 md:w-6 md:h-6" />
-              Detail
-            </button>
-          </div>
-        </RevealOnScroll>
-      </div>
-    </div>
-  );
-};
-
 // --- KOMPONEN BARIS FILM (CAROUSEL) ---
-const MovieRow = ({ title, movies }) => {
+const MovieRow = ({ title, movies, showMessage }) => {
   if (!movies || movies.length === 0) return null;
 
   return (
-    <div className="px-6 md:px-12 py-8 group/row">
+    <div className="px-6 md:px-12 py-6 group/row relative z-10">
       <RevealOnScroll>
-        <h3 className="text-white text-lg md:text-2xl font-bold mb-4 flex items-center gap-2">
-          {/* Aksen Judul Baris - Merah */}
+        <h3 className="text-white text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
           <span className="w-1.5 h-6 bg-red-600 rounded-full shadow-[0_0_10px_rgba(220,38,38,0.8)]"></span>
           {title}
         </h3>
         
-        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x scroll-smooth">
+        {/* Container Scroll */}
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x scroll-smooth relative">
           {movies.map((movie, idx) => {
             const imgUrl = movie.cover || movie.image || movie.img || movie.thumbnail || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop";
             
             return (
               <div 
                 key={movie.id || idx} 
-                className="relative min-w-[150px] md:min-w-[280px] h-[225px] md:h-[160px] rounded-md overflow-hidden cursor-pointer snap-start transition-all duration-300 hover:scale-105 hover:z-10 hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] border border-transparent hover:border-blue-500/60 group bg-gray-900"
+                onClick={() => showMessage(`Membuka detail untuk film: ${movie.title}`)}
+                className="relative min-w-[160px] md:min-w-[260px] h-[240px] md:h-[150px] rounded-md overflow-hidden cursor-pointer snap-start transition-all duration-300 hover:scale-105 hover:z-20 hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] border border-transparent hover:border-blue-500/60 group bg-gray-900"
               >
                 <img 
                   src={imgUrl} 
                   alt={movie.title} 
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 md:p-4 border-b-4 border-red-600">
-                  <h4 className="text-white font-bold text-xs md:text-base drop-shadow-md truncate">{movie.title}</h4>
-                  <div className="flex gap-2 mt-2">
-                    <button className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-white flex items-center justify-center hover:bg-red-600 transition-colors group/btn">
-                      <Play className="w-3 h-3 md:w-4 md:h-4 text-black fill-black group-hover/btn:text-white group-hover/btn:fill-white" />
+                
+                {/* Overlay Interaktif */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 border-b-4 border-red-600 pointer-events-none">
+                  <h4 className="text-white font-bold text-sm md:text-base drop-shadow-md truncate">{movie.title}</h4>
+                  <div className="flex gap-2 mt-2 pointer-events-auto">
+                    {/* Tombol Play (event.stopPropagation mencegah klik card parent ikut terpicu) */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation(); 
+                        showMessage(`▶ Memutar film: ${movie.title}`);
+                      }}
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white flex items-center justify-center hover:bg-red-600 transition-colors group/btn shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+                    >
+                      <Play className="w-4 h-4 md:w-5 md:h-5 text-black fill-black group-hover/btn:text-white group-hover/btn:fill-white ml-1" />
+                    </button>
+                    
+                    {/* Tombol Info */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation(); 
+                        showMessage(`ℹ Info selengkapnya tentang: ${movie.title}`);
+                      }}
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-gray-400 bg-black/50 flex items-center justify-center hover:border-blue-500 transition-colors text-white"
+                    >
+                      <Info className="w-4 h-4 md:w-5 md:h-5" />
                     </button>
                   </div>
                 </div>
@@ -212,45 +178,34 @@ const MovieRow = ({ title, movies }) => {
 
 // --- KOMPONEN UTAMA ---
 export default function App() {
-  const [featured, setFeatured] = useState(null);
   const [trending, setTrending] = useState([]);
   const [popular, setPopular] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // State untuk Custom Alert/Message Box
+  const [alertMessage, setAlertMessage] = useState(null);
 
   useEffect(() => {
-    // Fungsi untuk mengambil data dari backend API Python (Vercel)
+    // Fungsi Fetching Data
     const fetchMovieData = async () => {
       try {
         setLoading(true);
-        
-        // Memanggil API konten beranda
         const homeRes = await fetch('/api/homepage-content');
         const homeData = await homeRes.json();
         
-        // Memanggil API popular search
         const popRes = await fetch('/api/popular-search');
         const popData = await popRes.json();
 
-        // Validasi dan set data Trending / Hero
         if (homeData.status === 'success' && homeData.data?.length > 0) {
           setTrending(homeData.data);
-          setFeatured(homeData.data[0]); 
-        } else {
-          throw new Error("Data homepage kosong");
-        }
+        } else { throw new Error("Kosong"); }
 
-        // Validasi dan set data Popular
         if (popData.status === 'success' && popData.data?.length > 0) {
           setPopular(popData.data);
-        } else {
-           setPopular(FALLBACK_SCIFI);
-        }
+        } else { throw new Error("Kosong"); }
 
       } catch (error) {
-        console.warn("Koneksi API Gagal. Menggunakan antarmuka Cadangan (Fallback)...", error);
-        
-        // Menggunakan data dummy merah biru jika serverless API belum berjalan
-        setFeatured(FALLBACK_FEATURED);
+        // Fallback jika API Vercel belum siap
         setTrending(FALLBACK_TRENDING);
         setPopular(FALLBACK_SCIFI);
       } finally {
@@ -261,13 +216,12 @@ export default function App() {
     fetchMovieData();
   }, []);
 
-  // Tampilan Loading dengan tema Merah Biru
   if (loading) {
     return (
       <div className="min-h-screen bg-[#09090b] flex flex-col items-center justify-center text-red-500">
         <Loader2 className="w-12 h-12 animate-spin mb-4 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
         <p className="text-xl font-mono tracking-widest animate-pulse text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-blue-500">
-          MENGHUBUNGKAN KE SERVER...
+          MEMUAT DATA...
         </p>
       </div>
     );
@@ -275,26 +229,46 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#09090b] font-sans overflow-x-hidden selection:bg-red-600 selection:text-white pb-20">
-      <Navbar />
-      <Hero movie={featured} />
+      {/* Modal Popup pengganti Alert */}
+      <MessageBox message={alertMessage} onClose={() => setAlertMessage(null)} />
       
-      <div className="-mt-10 relative z-20">
-        <MovieRow title="Sedang Tren di Jaringan" movies={trending} />
-        <MovieRow title="Pencarian Populer" movies={popular} />
+      <Navbar showMessage={setAlertMessage} />
+      
+      {/* Kontainer Utama tanpa Landing Page (Diberi padding atas pt-24 agar tidak tertutup Navbar) */}
+      <div className="pt-24 relative z-20">
+        <MovieRow 
+          title="Sedang Tren Saat Ini" 
+          movies={trending} 
+          showMessage={setAlertMessage} 
+        />
         
-        {/* Render baris ekstra jika data cukup */}
-        {trending.length > 0 && (
-           <MovieRow title="Rekomendasi Sistem (Red-Picks)" movies={[...trending].reverse()} />
-        )}
+        <MovieRow 
+          title="Sci-Fi & Cyberpunk" 
+          movies={popular} 
+          showMessage={setAlertMessage} 
+        />
+        
+        {/* Render baris tambahan agar layar penuh */}
+        <MovieRow 
+          title="Rekomendasi Teratas" 
+          movies={[...trending].reverse()} 
+          showMessage={setAlertMessage} 
+        />
+        
+        <MovieRow 
+          title="Baru Ditambahkan" 
+          movies={[...popular].reverse()} 
+          showMessage={setAlertMessage} 
+        />
       </div>
 
-      <footer className="mt-20 px-6 md:px-12 py-8 border-t border-red-900/20">
+      <footer className="mt-12 px-6 md:px-12 py-8 border-t border-red-900/20">
         <RevealOnScroll>
           <div className="flex flex-col items-center justify-center text-gray-500 text-sm gap-4">
-            <h1 className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-900 to-blue-900 opacity-70">
+            <h1 className="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-red-900 to-blue-900 opacity-70">
               NEO<span className="text-gray-700">STREAM</span>
             </h1>
-            <p>© 2026 NeoStream Serverless Edition. Node Aktif.</p>
+            <p>© 2026 NeoStream Serverless. Sistem Berjalan Normal.</p>
           </div>
         </RevealOnScroll>
       </footer>
